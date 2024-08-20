@@ -1,0 +1,85 @@
+package service
+
+import (
+	"bookstore-api/internal/model"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+)
+
+type MockRepository struct {
+	mock.Mock
+}
+
+func (m *MockRepository) Find(id int) (model.User, error) {
+	args := m.Called()
+	result := args.Get(0)
+	return result.(model.User), args.Error(1)
+}
+
+func (m *MockRepository) FindAll() ([]model.User, error) {
+	args := m.Called()
+	result := args.Get(0)
+	return result.([]model.User), args.Error(1)
+}
+
+func (m *MockRepository) Create(user model.User) (int, error) {
+	args := m.Called()
+	result := args.Get(0)
+	return result.(int), args.Error(1)
+}
+
+func TestFind(t *testing.T) {
+	// was not able to mock generic
+	mockRepo := &MockRepository{}
+	id := 1
+
+	entity := model.User{ID: 1, Name: "Customer 1", Email: "customer@gmail.com"}
+	mockRepo.On("Find").Return(entity, nil)
+
+	testService := NewService(mockRepo)
+
+	result, _ := testService.Find(id)
+
+	mockRepo.AssertExpectations(t)
+
+	assert.Equal(t, 1, result.ID)
+	assert.Equal(t, entity.Name, result.Name)
+	assert.Equal(t, entity.Email, result.Email)
+
+}
+
+func TestFindAll(t *testing.T) {
+	mockRepo := &MockRepository{}
+
+	entity := model.User{ID: 1, Name: "Customer 1", Email: "customer@gmail.com"}
+	mockRepo.On("FindAll").Return([]model.User{entity}, nil)
+
+	testService := NewService(mockRepo)
+
+	result, _ := testService.FindAll()
+
+	mockRepo.AssertExpectations(t)
+
+	assert.Equal(t, 1, result[0].ID)
+	assert.Equal(t, entity.Name, result[0].Name)
+	assert.Equal(t, entity.Email, result[0].Email)
+
+}
+
+func TestCreate(t *testing.T) {
+	mockRepo := &MockRepository{}
+
+	entity := model.User{ID: 1, Name: "Customer 1", Email: "customer@gmail.com"}
+	mockRepo.On("Create").Return(entity.ID, nil)
+
+	testService := NewService(mockRepo)
+
+	result, _ := testService.Create(entity)
+
+	mockRepo.AssertExpectations(t)
+
+	assert.Equal(t, entity.ID, result)
+
+}

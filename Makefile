@@ -11,5 +11,8 @@ dev:
 test:
 	@go test -v ./...
 
+test-cover:
+	@go test -v ./... -cover
+
 seed:
 	@go run scripts/seed.go
