@@ -1,16 +1,19 @@
 package model
 
-import "gorm.io/gorm"
+type Entity interface {
+	User | Book | Order
+}
 
 type User struct {
-	gorm.Model
+	ID       int
 	Name     string
 	Email    string
 	Password string
+	Orders   []Order
 }
 
 type Book struct {
-	gorm.Model
+	ID     int
 	Title  string
 	Author string
 	Price  float64
@@ -18,9 +21,10 @@ type Book struct {
 }
 
 type Order struct {
-	gorm.Model
-	Books []Book `gorm:"many2many:order_items;"`
-	Total float64
+	ID     int
+	UserID int
+	Books  []Book `gorm:"many2many:order_items;"`
+	Total  float64
 }
 
 type OrderItem struct {
