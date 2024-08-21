@@ -30,14 +30,17 @@ func main() {
 	database.ConnectDB()
 
 	var (
-		userRepo    = repository.NewUserRepo[model.User](database.DBConn)
-		bookRepo    = repository.NewBookRepo[model.Book](database.DBConn)
-		userService = service.NewService(userRepo)
-		bookService = service.NewService(bookRepo)
+		userRepo     = repository.NewUserRepo[model.User](database.DBConn)
+		bookRepo     = repository.NewBookRepo[model.Book](database.DBConn)
+		orderRepo    = repository.NewOrderRepo[model.Order](database.DBConn)
+		userService  = service.NewService(userRepo)
+		bookService  = service.NewService(bookRepo)
+		orderService = service.NewService(orderRepo)
 
-		userHandler = handler.NewUserHandler(userService)
-		authHandler = handler.NewAuthHandler(userService)
-		bookHandler = handler.NewBookHandler(bookService)
+		userHandler  = handler.NewUserHandler(userService, orderService)
+		authHandler  = handler.NewAuthHandler(userService)
+		bookHandler  = handler.NewBookHandler(bookService)
+		orderHandler = handler.NewOrderHandler(orderService, userService)
 
 		app = fiber.New(config)
 
@@ -57,13 +60,15 @@ func main() {
 
 	// user routes
 	userRoutes := apiv1.Group("/users", middleware.JWTAuthentication)
-	userRoutes.Get("/:id", userHandler.Get)
-	userRoutes.Get("/", userHandler.GetAll)
-	userRoutes.Post("/", userHandler.Post)
+	userRoutes.Get("/me/orders", userHandler.GetOrders)
 
 	// book routes
 	bookRoutes := apiv1.Group("/books", middleware.JWTAuthentication)
 	bookRoutes.Get("/", bookHandler.GetAll)
+
+	// order routes
+	orderRoutes := apiv1.Group("/orders", middleware.JWTAuthentication)
+	orderRoutes.Post("/", orderHandler.Post)
 
 	// Listen from a different goroutine
 	go func() {
@@ -72,8 +77,10 @@ func main() {
 		}
 	}()
 
-	c := make(chan os.Signal, 1)                    // Create channel to signify a signal being sent
-	signal.Notify(c, os.Interrupt, syscall.SIGTERM) // When an interrupt or termination signal is sent, notify the channel
+	// Create channel to signify a signal being sent
+	c := make(chan os.Signal, 1)
+	// When an interrupt or termination signal is sent, notify the channel
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 
 	<-c // This blocks the main thread until an interrupt is received
 	fmt.Println("Gracefully shutting down...")

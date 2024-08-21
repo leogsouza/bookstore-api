@@ -34,6 +34,13 @@ func (c *bookRepo[T]) FindByCondition(condition string, args interface{}) (*mode
 	return &book, err
 }
 
+func (c *bookRepo[T]) FindAllByCondition(condition string, args interface{}) ([]*model.Book, error) {
+	books := []*model.Book{}
+	err := c.db.Where(condition, args).Find(&books).Error
+
+	return books, err
+}
+
 func (c *bookRepo[T]) Create(book model.Book) (*model.Book, error) {
 
 	result := c.db.Create(&book)

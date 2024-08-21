@@ -1,0 +1,44 @@
+services:
+  api:
+    container_name: api
+    build:
+      context: .
+      target: builder
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_DATABASE=${DB_DATABASE}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PORT=${DB_PORT}
+      - PAGADMIN_MAIL=${PGADMIN_MAIL}
+      - PGADMIN_PW=${PGADMIN_PW}
+      - JWT_SECRET=${JWT_SECRET}
+    ports:
+      - 3000:3000    
+  db:
+    container_name: db
+    image: postgres
+    restart: "always"    
+    user: postgres
+    secrets:
+      - db-password
+    volumes:
+      - db-data:/var/lib/postgresql/data    
+    environment:
+      - POSTGRES_DB=${DB_DATABASE}
+      - POSTGRES_PASSWORD_FILE=/run/secrets/db-password
+      - POSTGRES_USER=${DB_USERNAME}
+    ports:
+      - 5432:5432
+    healthcheck:
+      test: ["CMD", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+volumes:
+  db-data:
+secrets:
+  db-password:
+    file: db/password.txt

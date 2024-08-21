@@ -10,11 +10,12 @@ import (
 )
 
 type userHandler struct {
-	service service.Service[model.User]
+	service      service.Service[model.User]
+	orderService service.Service[model.Order]
 }
 
-func NewUserHandler(service service.Service[model.User]) *userHandler {
-	return &userHandler{service}
+func NewUserHandler(service service.Service[model.User], orderService service.Service[model.Order]) *userHandler {
+	return &userHandler{service, orderService}
 }
 
 func (h *userHandler) Get(ctx *fiber.Ctx) error {
@@ -66,4 +67,23 @@ func (h *userHandler) GetAll(ctx *fiber.Ctx) error {
 	}
 
 	return ctx.JSON(&users)
+}
+
+func (h *userHandler) GetOrders(ctx *fiber.Ctx) error {
+	userEmail, ok := ctx.Locals("userEmail").(string)
+	if !ok || userEmail == "" {
+		return ctx.SendStatus(fiber.StatusForbidden)
+	}
+
+	user, err := h.service.FindByCondition("email = ?", userEmail)
+	if err != nil {
+
+		return ctx.SendStatus(fiber.StatusForbidden)
+	}
+	orders, err := h.orderService.FindAllByCondition("user_id = ?", user.ID)
+	if err != nil {
+		return ctx.Status(500).JSON(nil)
+	}
+
+	return ctx.JSON(&orders)
 }

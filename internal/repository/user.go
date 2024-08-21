@@ -16,22 +16,29 @@ func NewUserRepo[T model.User](db *gorm.DB) Repository[model.User] {
 
 func (c *userRepo[T]) Find(id int) (model.User, error) {
 	user := model.User{}
-	err := c.db.First(&user, id).Error
+	err := c.db.Preload("Orders").First(&user, id).Error
 
 	return user, err
 }
 
 func (c *userRepo[T]) FindAll() ([]model.User, error) {
 	var users = []model.User{}
-	err := c.db.Find(&users).Error
+	err := c.db.Preload("Orders").Find(&users).Error
 	return users, err
 }
 
 func (c *userRepo[T]) FindByCondition(condition string, args interface{}) (*model.User, error) {
 	user := model.User{}
-	err := c.db.Where(condition, args).First(&user).Error
+	err := c.db.Where(condition, args).Preload("Orders").First(&user).Error
 
 	return &user, err
+}
+
+func (c *userRepo[T]) FindAllByCondition(condition string, args interface{}) ([]*model.User, error) {
+	users := []*model.User{}
+	err := c.db.Where(condition, args).Preload("Orders").Find(&users).Error
+
+	return users, err
 }
 
 func (c *userRepo[T]) Create(user model.User) (*model.User, error) {

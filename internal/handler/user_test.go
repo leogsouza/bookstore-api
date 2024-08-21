@@ -57,6 +57,26 @@ func (m *userMockService) FindByCondition(condition string, data interface{}) (*
 	return &user, err
 }
 
+func (m *userMockService) FindAllByCondition(condition string, data interface{}) ([]*model.User, error) {
+	args := m.Called(condition, data)
+	var users []*model.User
+
+	if rf, ok := args.Get(0).(func(string, interface{}) []*model.User); ok {
+		users = rf(condition, data)
+	} else if args.Get(0) != nil {
+		users = args.Get(0).([]*model.User)
+	}
+
+	var err error
+	if rf, ok := args.Get(1).(func(string, interface{}) error); ok {
+		err = rf(condition, data)
+	} else {
+		err = args.Error(1)
+	}
+
+	return users, err
+}
+
 func (m *userMockService) FindAll() ([]model.User, error) {
 	args := m.Called()
 	result := args.Get(0)
@@ -87,7 +107,7 @@ func TestGetAllUsers(t *testing.T) {
 		mockService := new(userMockService)
 		mockService.On("FindAll").Return(getUsers(), nil)
 
-		userHandler := NewUserHandler(mockService)
+		userHandler := NewUserHandler(mockService, nil)
 
 		app := fiber.New()
 
@@ -123,7 +143,7 @@ func TestGetUser(t *testing.T) {
 		mockService := new(userMockService)
 		mockService.On("Find", 1).Return(getUser(), nil)
 
-		userHandler := NewUserHandler(mockService)
+		userHandler := NewUserHandler(mockService, nil)
 
 		app := fiber.New()
 
@@ -159,7 +179,7 @@ func TestGetUser(t *testing.T) {
 		mockService := new(userMockService)
 		mockService.On("Find", 1).Return(nil, errors.New("user not found"), nil)
 
-		userHandler := NewUserHandler(mockService)
+		userHandler := NewUserHandler(mockService, nil)
 
 		app := fiber.New()
 
@@ -201,7 +221,7 @@ func TestCreateUser(t *testing.T) {
 		mockService := new(userMockService)
 		mockService.On("Create", userModel).Return(1, nil)
 
-		userHandler := NewUserHandler(mockService)
+		userHandler := NewUserHandler(mockService, nil)
 
 		app := fiber.New()
 
@@ -252,7 +272,7 @@ func TestCreateUser(t *testing.T) {
 		mockService := new(userMockService)
 		mockService.On("Create", userModel).Return(nil, errors.New("user not found"))
 
-		userHandler := NewUserHandler(mockService)
+		userHandler := NewUserHandler(mockService, nil)
 
 		app := fiber.New()
 
@@ -266,7 +286,6 @@ func TestCreateUser(t *testing.T) {
 		assert.Equal(t, resp.StatusCode, fiber.StatusInternalServerError)
 
 		mockService.AssertExpectations(t)
-
 	})
 
 }

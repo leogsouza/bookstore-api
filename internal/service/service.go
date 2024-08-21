@@ -30,6 +30,11 @@ func (s *service[T]) FindByCondition(condition string, args interface{}) (*T, er
 	return s.repo.FindByCondition(condition, args)
 }
 
+func (s *service[T]) FindAllByCondition(condition string, args interface{}) ([]*T, error) {
+
+	return s.repo.FindAllByCondition(condition, args)
+}
+
 func (s *service[T]) Create(entity T) (*T, error) {
 	return s.repo.Create(entity)
 }

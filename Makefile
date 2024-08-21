@@ -7,7 +7,6 @@ run: build
 dev: 
 	air
 
-
 test:
 	@go test -v ./...
 

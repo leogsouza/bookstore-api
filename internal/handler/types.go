@@ -36,3 +36,31 @@ func (u *userRequest) HashPassword() ([]byte, error) {
 func IsValidPassword(encpw, pw string) bool {
 	return bcrypt.CompareHashAndPassword([]byte(encpw), []byte(pw)) == nil
 }
+
+type orderRequest struct {
+	Items []orderItemRequest `json:"items" validate:"required,gte=1"`
+}
+
+type orderItemRequest struct {
+	BookID   int     `json:"book_id" validate:"required"`
+	Quantity int     `json:"quantity" validate:"required,gte=1"`
+	Price    float64 `json:"price" validate:"required,gt=0"`
+}
+
+func NewOrderFromRequest(req orderRequest) *model.Order {
+
+	books := []model.OrderItem{}
+
+	var total float64
+	for _, item := range req.Items {
+		book := model.OrderItem{BookID: item.BookID, Price: item.Price, Quantity: item.Quantity}
+
+		books = append(books, book)
+		total += (item.Price * float64(item.Quantity))
+	}
+
+	return &model.Order{
+		OrderItems: books,
+		Total:      total,
+	}
+}

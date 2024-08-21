@@ -21,10 +21,10 @@ type Book struct {
 }
 
 type Order struct {
-	ID     int
-	UserID int     `gorm:"not null"`
-	Books  []Book  `gorm:"many2many:order_items;"`
-	Total  float64 `gorm:"not null"`
+	ID         int
+	UserID     int     `gorm:"not null"`
+	Total      float64 `gorm:"not null"`
+	OrderItems []OrderItem
 }
 
 type OrderItem struct {

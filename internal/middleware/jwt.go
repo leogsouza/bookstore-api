@@ -19,11 +19,13 @@ func JWTAuthentication(c *fiber.Ctx) error {
 		Issuer:    "AuthUser",
 	}
 
-	_, err := jwtWrapper.ValidateToken(token)
+	claim, err := jwtWrapper.ValidateToken(token)
 
 	if err != nil {
 		return err
 	}
+
+	c.Locals("userEmail", claim.Email)
 
 	return c.Next()
 }
