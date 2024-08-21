@@ -11,8 +11,9 @@ type Repository[T model.Entity] interface {
 type Reader[T model.Entity] interface {
 	Find(id int) (T, error)
 	FindAll() ([]T, error)
+	FindByCondition(condition string, data interface{}) (*T, error)
 }
 
 type Writer[T model.Entity] interface {
-	Create(T) (int, error)
+	Create(T) (*T, error)
 }

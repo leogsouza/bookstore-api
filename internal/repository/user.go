@@ -27,9 +27,17 @@ func (c *userRepo[T]) FindAll() ([]model.User, error) {
 	return users, err
 }
 
-func (c *userRepo[T]) Create(user model.User) (int, error) {
+func (c *userRepo[T]) FindByCondition(condition string, args interface{}) (*model.User, error) {
+	user := model.User{}
+	err := c.db.Where(condition, args).First(&user).Error
 
-	err := c.db.Create(&user).Error
-	return user.ID, err
+	return &user, err
+}
+
+func (c *userRepo[T]) Create(user model.User) (*model.User, error) {
+
+	result := c.db.Create(&user)
+
+	return &user, result.Error
 
 }

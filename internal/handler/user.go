@@ -36,7 +36,6 @@ func (h *userHandler) Post(ctx *fiber.Ctx) error {
 
 	userReq := userRequest{}
 
-	u := model.User{}
 	if err := ctx.BodyParser(&userReq); err != nil {
 		return ctx.Status(500).JSON(nil)
 	}
@@ -50,11 +49,11 @@ func (h *userHandler) Post(ctx *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	userID, err := h.service.Create(*user)
+	u, err := h.service.Create(*user)
 	if err != nil {
 		return ctx.Status(500).JSON(nil)
 	}
-	log.Info("user created with id", userID)
+	log.Info("user created with id", u.ID)
 
 	return ctx.JSON(&u)
 

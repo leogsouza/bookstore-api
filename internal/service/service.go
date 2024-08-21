@@ -25,6 +25,11 @@ func (s *service[T]) FindAll() ([]T, error) {
 	return s.repo.FindAll()
 }
 
-func (s *service[T]) Create(entity T) (int, error) {
+func (s *service[T]) FindByCondition(condition string, args interface{}) (*T, error) {
+
+	return s.repo.FindByCondition(condition, args)
+}
+
+func (s *service[T]) Create(entity T) (*T, error) {
 	return s.repo.Create(entity)
 }

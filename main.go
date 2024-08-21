@@ -3,6 +3,7 @@ package main
 import (
 	"bookstore-api/internal/database"
 	"bookstore-api/internal/handler"
+	"bookstore-api/internal/middleware"
 	"bookstore-api/internal/model"
 	"bookstore-api/internal/repository"
 	"bookstore-api/internal/service"
@@ -18,16 +19,27 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/recover"
 )
 
+var config = fiber.Config{
+	ErrorHandler: func(c *fiber.Ctx, err error) error {
+		log.Error("Error happened ", err)
+		return c.JSON(map[string]string{"error": err.Error()})
+	},
+}
+
 func main() {
 	database.ConnectDB()
-	app := fiber.New(fiber.Config{
-		BodyLimit: 200 * 1024 * 1024,
-		ErrorHandler: func(c *fiber.Ctx, err error) error {
-			log.Error("Error happened ", err)
-			c.Status(fiber.StatusInternalServerError)
-			return c.SendString(err.Error())
-		},
-	})
+
+	var (
+		userRepo    = repository.NewUserRepo[model.User](database.DBConn)
+		userService = service.NewService(userRepo)
+
+		userHandler = handler.NewUserHandler(userService)
+		authHandler = handler.NewAuthHandler(userService)
+
+		app = fiber.New(config)
+
+		apiv1 = app.Group("/api/v1")
+	)
 
 	app.Use(logger.New(logger.Config{
 		Format: "[${time}] ${ip}  ${status} - ${latency} ${method} ${path}\n",
@@ -36,15 +48,12 @@ func main() {
 	app.Use(recover.New())
 	app.Use(cors.New())
 
-	api := app.Group("/api")
+	// auth routes
+	auth := apiv1.Group("/auth")
+	auth.Post("/login", authHandler.Authenticate)
 
-	v1 := api.Group("/v1")
+	userRoutes := apiv1.Group("/users", middleware.JWTAuthentication)
 
-	userRepo := repository.NewUserRepo[model.User](database.DBConn)
-	userService := service.NewService(userRepo)
-	userRoutes := v1.Group("/users")
-
-	userHandler := handler.NewUserHandler(userService)
 	userRoutes.Get("/:id", userHandler.Get)
 	userRoutes.Get("/", userHandler.GetAll)
 	userRoutes.Post("/", userHandler.Post)
