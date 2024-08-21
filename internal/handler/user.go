@@ -46,11 +46,11 @@ func (h *userHandler) Post(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusBadRequest).JSON(err.Error())
 	}
 
-	u.Name = userReq.Name
-	u.Email = userReq.Email
-	u.Password = userReq.Password
-
-	userID, err := h.service.Create(u)
+	user, err := NewUserFromRequest(userReq)
+	if err != nil {
+		return err
+	}
+	userID, err := h.service.Create(*user)
 	if err != nil {
 		return ctx.Status(500).JSON(nil)
 	}

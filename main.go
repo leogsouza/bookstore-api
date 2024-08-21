@@ -2,6 +2,10 @@ package main
 
 import (
 	"bookstore-api/internal/database"
+	"bookstore-api/internal/handler"
+	"bookstore-api/internal/model"
+	"bookstore-api/internal/repository"
+	"bookstore-api/internal/service"
 	"fmt"
 	"os"
 	"os/signal"
@@ -31,6 +35,19 @@ func main() {
 
 	app.Use(recover.New())
 	app.Use(cors.New())
+
+	api := app.Group("/api")
+
+	v1 := api.Group("/v1")
+
+	userRepo := repository.NewUserRepo[model.User](database.DBConn)
+	userService := service.NewService(userRepo)
+	userRoutes := v1.Group("/users")
+
+	userHandler := handler.NewUserHandler(userService)
+	userRoutes.Get("/:id", userHandler.Get)
+	userRoutes.Get("/", userHandler.GetAll)
+	userRoutes.Post("/", userHandler.Post)
 
 	// Listen from a different goroutine
 	go func() {
