@@ -31,10 +31,13 @@ func main() {
 
 	var (
 		userRepo    = repository.NewUserRepo[model.User](database.DBConn)
+		bookRepo    = repository.NewBookRepo[model.Book](database.DBConn)
 		userService = service.NewService(userRepo)
+		bookService = service.NewService(bookRepo)
 
 		userHandler = handler.NewUserHandler(userService)
 		authHandler = handler.NewAuthHandler(userService)
+		bookHandler = handler.NewBookHandler(bookService)
 
 		app = fiber.New(config)
 
@@ -52,11 +55,15 @@ func main() {
 	auth := apiv1.Group("/auth")
 	auth.Post("/login", authHandler.Authenticate)
 
+	// user routes
 	userRoutes := apiv1.Group("/users", middleware.JWTAuthentication)
-
 	userRoutes.Get("/:id", userHandler.Get)
 	userRoutes.Get("/", userHandler.GetAll)
 	userRoutes.Post("/", userHandler.Post)
+
+	// book routes
+	bookRoutes := apiv1.Group("/books", middleware.JWTAuthentication)
+	bookRoutes.Get("/", bookHandler.GetAll)
 
 	// Listen from a different goroutine
 	go func() {

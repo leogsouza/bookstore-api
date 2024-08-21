@@ -10,7 +10,7 @@ type bookRepo[T model.Book] struct {
 	db *gorm.DB
 }
 
-func NewBookRepo[T model.Book](db *gorm.DB) Reader[model.Book] {
+func NewBookRepo[T model.Book](db *gorm.DB) Repository[model.Book] {
 	return &bookRepo[T]{db}
 }
 
@@ -32,4 +32,12 @@ func (c *bookRepo[T]) FindByCondition(condition string, args interface{}) (*mode
 	err := c.db.Where(condition, args).First(&book).Error
 
 	return &book, err
+}
+
+func (c *bookRepo[T]) Create(book model.Book) (*model.Book, error) {
+
+	result := c.db.Create(&book)
+
+	return &book, result.Error
+
 }
