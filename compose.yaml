@@ -1,9 +1,7 @@
 services:
   api:
     container_name: api
-    build:
-      context: .
-      target: builder
+    build: .    
     depends_on:
       db:
         condition: service_healthy
@@ -12,8 +10,6 @@ services:
       - DB_DATABASE=${DB_DATABASE}
       - DB_USERNAME=${DB_USERNAME}
       - DB_PORT=${DB_PORT}
-      - PAGADMIN_MAIL=${PGADMIN_MAIL}
-      - PGADMIN_PW=${PGADMIN_PW}
       - JWT_SECRET=${JWT_SECRET}
     ports:
       - 3000:3000    

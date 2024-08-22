@@ -59,8 +59,9 @@ func main() {
 	auth.Post("/login", authHandler.Authenticate)
 
 	// user routes
-	userRoutes := apiv1.Group("/users", middleware.JWTAuthentication)
-	userRoutes.Get("/me/orders", userHandler.GetOrders)
+	userRoutes := apiv1.Group("/users")
+	userRoutes.Post("/", userHandler.Post)
+	userRoutes.Get("/me/orders", middleware.JWTAuthentication, userHandler.GetOrders)
 
 	// book routes
 	bookRoutes := apiv1.Group("/books", middleware.JWTAuthentication)
